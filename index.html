@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #2b1055, #7597de);
+      font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+      min-height: 100vh;
+      color: white;
+      touch-action: manipulation;
+    }
+
+    .game-container {
+      max-width: 100%;
+      padding: 15px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(rgba(43, 16, 85, 0.2), rgba(117, 151, 222, 0.2));
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin: 10px 0;
+      color: #ff9ed2;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin: 15px 0;
+      padding: 0 10px;
+    }
+
+    .stat-container {
+      background: rgba(117, 151, 222, 0.2);
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 158, 210, 0.3);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      color: #ff9ed2;
+    }
+
+    .stat-bar {
+      background: rgba(43, 16, 85, 0.3);
+      border: 2px solid #ff9ed2;
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .stat-fill {
+      background: linear-gradient(90deg, #7597de, #ff9ed2);
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.3s ease;
+    }
+
+    .pet-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      touch-action: none;
+    }
+
+    .kuromi {
+      width: 180px;
+      height: 180px;
+      background: url('/api/placeholder/180/180') center/contain no-repeat;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .kuromi.poked {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    .kuromi.scratched {
+      animation: spin 0.7s ease-in-out;
+    }
+
+    .kuromi.happy {
+      animation: bounce 0.5s ease infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px) rotate(-5deg); }
+      75% { transform: translateX(5px) rotate(5deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(0.8); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .mood {
+      font-size: 2rem;
+      text-align: center;
+      margin: 10px 0;
+      height: 40px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #7597de, #2b1055);
+      border: 2px solid #ff9ed2;
+      border-radius: 15px;
+      color: white;
+      padding: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(117, 151, 222, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(117, 151, 222, 0.2);
+      background: linear-gradient(135deg, #2b1055, #7597de);
+    }
+
+    .hearts {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: float 1s ease-out forwards;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-50px) scale(1);
+        opacity: 0;
+      }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      animation: sparkle 0.8s linear forwards;
+    }
+
+    @keyframes sparkle {
+      0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) rotate(180deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<!-- Rest of the HTML and JavaScript remains the same as the previous version -->
+<body>
+  <div class="game-container">
+    <h1>✨ Kuromi Pet ✨</h1>
+    
+    <div class="stats">
+      <div class="stat-container">
+        <div class="stat-label">
+          <span>Hunger</span>
+          <span class="stat-value" id="hunger-value">80%</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" id="hunger-bar" style="width: 80%;"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="stat-label">
+          <span>Happiness</span>
+          <span class="stat-value" id="happiness-value">60%</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" id="happiness-bar" style="width: 60%;"></div>
+        </div>
+      </div>
+      <div class="stat-container">
+        <div class="stat-label">
+          <span>Energy</span>
+          <span class="stat-value" id="energy-value">70%</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" id="energy-bar" style="width: 70%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pet-container">
+      <div class="kuromi"></div>
+    </div>
+
+    <div class="mood">😊</div>
+
+    <div class="actions">
+      <button onclick="feed()">🍜 Feed</button>
+      <button onclick="play()">🎮 Play</button>
+      <button onclick="sleep()">😴 Sleep</button>
+      <button onclick="clean()">✨ Clean</button>
+    </div>
+  </div>
+
+  <script>
+    let hunger = 80;
+    let happiness = 60;
+    let energy = 70;
+    let lastInteraction = 0;
+    
+    const kuromi = document.querySelector('.kuromi');
+    const petContainer = document.querySelector('.pet-container');
+    let isDragging = false;
+    let startY = 0;
+    
+    function updateBars() {
+      document.getElementById('hunger-bar').style.width = hunger + '%';
+      document.getElementById('happiness-bar').style.width = happiness + '%';
+      document.getElementById('energy-bar').style.width = energy + '%';
+      document.getElementById('hunger-value').textContent = hunger + '%';
+      document.getElementById('happiness-value').textContent = happiness + '%';
+      document.getElementById('energy-value').textContent = energy + '%';
+      updateMood();
+    }
+
+    function updateMood() {
+      const average = (hunger + happiness + energy) / 3;
+      let mood = '😊';
+      if (average < 30) mood = '😢';
+      else if (average < 60) mood = '😐';
+      else if (average > 80) mood = '🥰';
+      document.querySelector('.mood').textContent = mood;
+    }
+
+    function createHeart(x, y) {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.textContent = '❤️';
+      heart.style.left = x + 'px';
+      heart.style.top = y + 'px';
+      petContainer.appendChild(heart);
+      setTimeout(() => heart.remove(), 1000);
+    }
+
+    function createSparkle(x, y) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.textContent = '✨';
+      sparkle.style.left = x + 'px';
+      sparkle.style.top = y + 'px';
+      petContainer.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 800);
+    }
+
+    petContainer.addEventListener('pointerdown', (e) => {
+      if (Date.now() - lastInteraction < 500) return;
+      lastInteraction = Date.now();
+      
+      const rect = kuromi.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (e.pointerType === 'touch') {
+        startY = e.clientY;
+        isDragging = true;
+      }
+      
+      kuromi.classList.add('poked');
+      createHeart(x, y);
+      happiness = Math.min(100, happiness + 5);
+      updateBars();
+      
+      setTimeout(() => kuromi.classList.remove('poked'), 500);
+    });
+
+    petContainer.addEventListener('pointermove', (e) => {
+      if (isDragging && e.pointerType === 'touch') {
+        const deltaY = Math.abs(e.clientY - startY);
+        if (deltaY > 50) {
+          kuromi.classList.add('scratched');
+          createSparkle(e.clientX, e.clientY);
+          happiness = Math.min(100, happiness + 2);
+          updateBars();
+          isDragging = false;
+        }
+      }
+    });
+
+    petContainer.addEventListener('pointerup', () => {
+      isDragging = false;
+      kuromi.classList.remove('scratched');
+    });
+
+    petContainer.addEventListener('pointercancel', () => {
+      isDragging = false;
+      kuromi.classList.remove('scratched');
+    });
+
+    function feed() {
+      if (hunger < 100) {
+        hunger = Math.min(100, hunger + 20);
+        energy = Math.max(0, energy - 5);
+        kuromi.classList.add('happy');
+        setTimeout(() => kuromi.classList.remove('happy'), 1000);
+        updateBars();
+      }
+    }
+
+    function play() {
+      if (energy > 20) {
+        happiness = Math.min(100, happiness + 20);
+        energy = Math.max(0, energy - 20);
+        hunger = Math.max(0, hunger - 10);
+        kuromi.classList.add('happy');
+        setTimeout(() => kuromi.classList.remove('happy'), 1000);
+        updateBars();
+      }
+    }
+
+    function sleep() {
+      energy = Math.min(100, energy + 40);
+      hunger = Math.max(0, hunger - 15);
+      updateBars();
+    }
+
+    function clean() {
+      happiness = Math.min(100, happiness + 10);
+      energy = Math.max(0, energy - 5);
+      createSparkle(kuromi.offsetLeft + kuromi.offsetWidth/2, kuromi.offsetTop + kuromi.offsetHeight/2);
+      updateBars();
+    }
+
+    setInterval(() => {
+      hunger = Math.max(0, hunger - 0.5);
+      happiness = Math.max(0, happiness - 0.5);
+      energy = Math.max(0, energy - 0.5);
+      updateBars();
+    }, 5000);
+  </script>
+</body>
+</html>
